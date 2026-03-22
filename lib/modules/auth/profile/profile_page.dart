@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:lokse/core/utils/extensions.dart';
 import 'profile_controller.dart';
 
 class ProfilePage extends StatelessWidget {
