@@ -24,13 +24,13 @@ class OnboardingPage extends StatelessWidget {
                   'Skip',
                   style: TextStyle(
                     color: Colors.white70,
-                    fontSize: 0.014.toRes(context),
+                    fontSize: context.sw(0.035),
                   ),
                 ),
               ),
             ),
 
-            // PageView
+            // PageView014.toRes(context)
             Expanded(
               child: PageView(
                 controller: controller.pageController,
@@ -62,8 +62,8 @@ class OnboardingPage extends StatelessWidget {
             // Bottom Controls
             Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: 0.07.sw(context),
-                vertical: 0.01.sh(context),
+                horizontal: context.sw(0.07),
+                vertical: context.sh(0.01),
               ),
               child: Obx(() {
                 final isLast = controller.currentIndex.value == 2;
@@ -78,11 +78,11 @@ class OnboardingPage extends StatelessWidget {
                         (index) => AnimatedContainer(
                           duration: const Duration(milliseconds: 250),
                           margin: EdgeInsets.symmetric(
-                              horizontal: 0.02.sw(context)),
-                          height: 0.008.sh(context),
+                              horizontal: context.sw(0.02)),
+                          height: context.sh(0.008),
                           width: controller.currentIndex.value == index
-                              ? 0.06.sw(context)
-                              : 0.02.sw(context),
+                              ? context.sw(0.06)
+                              : context.sw(0.02),
                           decoration: BoxDecoration(
                             color: controller.currentIndex.value == index
                                 ? Colors.white
@@ -92,13 +92,13 @@ class OnboardingPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: 0.03.sh(context)),
+                    SizedBox(height: context.sh(0.03)),
 
                     // Buttons
                     if (!isLast)
                       SizedBox(
                         width: double.infinity,
-                        height: 0.06.sh(context),
+                        height: context.sh(0.06),
                         child: ElevatedButton(
                           onPressed: controller.nextPage,
                           style: ElevatedButton.styleFrom(
@@ -106,14 +106,14 @@ class OnboardingPage extends StatelessWidget {
                             foregroundColor: Colors.black,
                             shape: RoundedRectangleBorder(
                               borderRadius:
-                                  BorderRadius.circular(0.035.sw(context)),
+                                  BorderRadius.circular(context.sw(0.035)),
                             ),
                           ),
                           child: Text(
                             'Next',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
-                              fontSize: 0.014.toRes(context),
+                              fontSize: context.sw(0.014),
                             ),
                           ),
                         ),
@@ -124,7 +124,7 @@ class OnboardingPage extends StatelessWidget {
                           // Login Button
                           SizedBox(
                             width: double.infinity,
-                            height: 0.06.sh(context),
+                            height: context.sh(0.06),
                             child: ElevatedButton(
                               onPressed: controller.goToLogin,
                               style: ElevatedButton.styleFrom(
@@ -132,24 +132,24 @@ class OnboardingPage extends StatelessWidget {
                                 foregroundColor: Colors.black,
                                 shape: RoundedRectangleBorder(
                                   borderRadius:
-                                      BorderRadius.circular(0.035.sw(context)),
+                                      BorderRadius.circular(context.sw(0.035)),
                                 ),
                               ),
                               child: Text(
                                 'Login / Sign in',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 0.014.toRes(context),
+                                  fontSize: context.sw(0.014),
                                 ),
                               ),
                             ),
                           ),
-                          SizedBox(height: 0.015.sh(context)),
+                          SizedBox(height: context.sh(0.015)),
 
                           // Guest Button
                           SizedBox(
                             width: double.infinity,
-                            height: 0.065.sh(context),
+                            height: context.sh(0.065),
                             child: OutlinedButton(
                               onPressed: controller.continueAsGuest,
                               style: OutlinedButton.styleFrom(
@@ -157,7 +157,7 @@ class OnboardingPage extends StatelessWidget {
                                     BorderSide(color: Colors.white38, width: 1),
                                 shape: RoundedRectangleBorder(
                                   borderRadius:
-                                      BorderRadius.circular(0.035.sw(context)),
+                                      BorderRadius.circular(context.sw(0.035)),
                                 ),
                               ),
                               child: Text(
@@ -165,7 +165,7 @@ class OnboardingPage extends StatelessWidget {
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w500,
-                                  fontSize: 0.014.toRes(context),
+                                  fontSize: context.sw(0.014),
                                 ),
                               ),
                             ),
@@ -199,40 +199,40 @@ class _OnboardingItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 0.07.sw(context)),
+      padding: EdgeInsets.symmetric(horizontal: context.sw(0.07)),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Icon Box
           Container(
-            height: 0.15.sh(context),
-            width: 0.15.sh(context),
+            height: context.sh(0.15),
+            width: context.sh(0.15),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(0.04.sh(context)),
+              borderRadius: BorderRadius.circular(context.sw(0.04)),
             ),
-            child: Icon(icon, size: 0.1.sh(context), color: Colors.white),
+            child: Icon(icon, size: context.sh(0.1), color: Colors.white),
           ),
-          SizedBox(height: 0.05.sh(context)),
+          SizedBox(height: context.sh(0.05)),
 
           // Title
           Text(
             title,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 0.06.sw(context),
+              fontSize: context.sw(0.06),
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 0.02.sh(context)),
+          SizedBox(height: context.sh(0.02)),
 
           // Subtitle
           Text(
             subtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 0.038.sw(context),
+              fontSize: context.sw(0.038),
               height: 1.6,
               color: Colors.white.withOpacity(0.65),
             ),

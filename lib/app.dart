@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lokse/bindings/global_bindings.dart';
 import 'package:lokse/core/theme/app_theme.dart';
-
-import '../routes/app_pages.dart';
-import '../routes/app_routes.dart';
-import '../bindings/initial_binding.dart';
+import 'package:lokse/routes/app_pages.dart';
+import 'package:lokse/routes/app_routes.dart';
 
 class LokseApp extends StatelessWidget {
   const LokseApp({super.key});
@@ -14,12 +13,14 @@ class LokseApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Lokse',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      initialBinding: InitialBinding(),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.light,
+      initialBinding: GlobalBindings(),
       initialRoute: AppRoutes.splash,
       getPages: AppPages.pages,
-      defaultTransition: Transition.fade,
-      transitionDuration: const Duration(milliseconds: 300),
+      defaultTransition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 280),
     );
   }
 }

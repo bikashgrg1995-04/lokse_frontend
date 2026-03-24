@@ -4,7 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:lokse/core/constants/app_constants.dart';
+import 'package:lokse/core/constants/logger.dart';
 
 /// 🔌 Network Manager using GetX
 /// 0 = No Internet
@@ -34,7 +34,7 @@ class GetXNetworkManager extends GetxController {
       _updateConnectionType(results);
     } catch (e) {
       if (kDebugMode) {
-        logger.e("❌ Initial connectivity check failed", error: e);
+        appLog.e("❌ Initial connectivity check failed", error: e);
       }
     }
   }
@@ -69,7 +69,7 @@ class GetXNetworkManager extends GetxController {
       }
     }
 
-    logger.d(
+    appLog.d(
       "🌐 Network: ${_connectionTypeToString(connectionType.value)}",
     );
 

@@ -2,7 +2,7 @@ import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 import 'package:lokse/core/storage/secure_storage.dart';
 import 'package:lokse/core/utils/api_config.dart';
-import 'package:lokse/core/constants/app_constants.dart';
+import 'package:lokse/core/constants/logger.dart';
 
 class DioClient {
   static late dio.Dio client;
@@ -46,7 +46,7 @@ class DioClient {
       }
     }
 
-    logger.i(
+    appLog.i(
       '[REQUEST] ${options.method} ${options.uri}\nDATA: ${options.data}',
     );
     handler.next(options);
@@ -57,7 +57,7 @@ class DioClient {
     dio.Response response,
     dio.ResponseInterceptorHandler handler,
   ) {
-    logger.i(
+    appLog.i(
       '[RESPONSE] ${response.statusCode} ${response.requestOptions.uri}\nDATA: ${response.data}',
     );
     handler.next(response);
@@ -68,7 +68,7 @@ class DioClient {
     dio.DioException error,
     dio.ErrorInterceptorHandler handler,
   ) async {
-    logger.e(
+    appLog.e(
       '[ERROR] ${error.response?.statusCode} ${error.requestOptions.uri}',
       error: error.response?.data,
     );
@@ -122,10 +122,10 @@ class DioClient {
         refreshToken: refreshToken, // SimpleJWT reuse
       );
 
-      logger.i('JWT refreshed successfully');
+      appLog.i('JWT refreshed successfully');
       return true;
     } catch (e, s) {
-      logger.e('JWT refresh failed', error: e, stackTrace: s);
+      appLog.e('JWT refresh failed', error: e, stackTrace: s);
       return false;
     } finally {
       _isRefreshing = false;

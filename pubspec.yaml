@@ -115,8 +115,7 @@ flutter_icons:
 
 # 🔥 NATIVE SPLASH CONFIG
 flutter_native_splash:
-  color: "#163EEF"         # Deep blue matching your animated splash bottom color
-  image: assets/images/logo.png
+  color: "#0A1628"
   android: true
   ios: true
   web: false

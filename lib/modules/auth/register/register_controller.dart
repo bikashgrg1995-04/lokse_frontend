@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
-import 'package:lokse/core/constants/app_constants.dart';
+import 'package:lokse/core/constants/logger.dart';
 import 'package:lokse/core/network/getx_network_manager.dart';
 import 'package:lokse/core/utils/dio_client.dart';
 import 'package:lokse/core/utils/api_config.dart';
@@ -74,7 +74,7 @@ class RegisterController extends GetxController {
         ),
       );
 
-      logger.i("✅ Register success: ${response.data}");
+      appLog.i("✅ Register success: ${response.data}");
 
       if (response.data?['activation_url'] != null) {
         activationLink.value = response.data['activation_url'];
@@ -101,9 +101,9 @@ class RegisterController extends GetxController {
         StatusMessage.error("Server failed");
       }
 
-      logger.e("❌ Register failed", error: e.response?.data);
+      appLog.e("❌ Register failed", error: e.response?.data);
     } catch (e, s) {
-      logger.wtf("🔥 Unexpected error", error: e, stackTrace: s);
+      appLog.d("🔥 Unexpected error", error: e, stackTrace: s);
       StatusMessage.error("Something went wrong");
     } finally {
       isLoading.value = false;

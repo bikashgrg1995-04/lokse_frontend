@@ -1,188 +1,143 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:lokse/modules/auth/login/login_controller.dart';
+import 'package:lokse/core/constants/app_colors.dart';
+import 'package:lokse/core/constants/app_sizes.dart';
+import 'package:lokse/core/constants/app_strings.dart';
+import 'package:lokse/core/constants/app_assets.dart';
 import 'package:lokse/routes/app_routes.dart';
+import 'package:lokse/widgets/common_widgets.dart';
+import 'login_controller.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(LoginController());
+    final c = Get.put(LoginController());
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSizes.xxl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: AppSizes.xxxl),
 
-              /// LOGO / TITLE
+              // Logo + title
               Center(
                 child: Column(
-                  children: const [
-                    Icon(Icons.school, size: 60, color: Colors.indigo),
-                    SizedBox(height: 10),
-                    Text(
-                      'Lokse',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      'Prepare smart for Loksewa',
-                      style: TextStyle(color: Colors.grey),
-                    ),
+                  children: [
+                    Image.asset(AppAssets.logo,
+                        height: 72,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.school,
+                            size: 60, color: AppColors.primary)),
+                    const SizedBox(height: AppSizes.sm),
+                    const Text(AppStrings.appName,
+                        style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1)),
+                    const SizedBox(height: AppSizes.xs),
+                    const Text('Prepare smart for Loksewa',
+                        style: TextStyle(color: AppColors.grey400)),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: AppSizes.xxxl),
 
-              /// EMAIL
-              TextField(
-                controller: controller.emailController,
+              // Email
+              AppTextField(
+                controller: c.emailCtrl,
+                label: AppStrings.email,
+                prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSizes.lg),
 
-              /// PASSWORD
-              Obx(() => TextField(
-                    controller: controller.passwordController,
-                    obscureText: controller.obscurePassword.value,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          controller.obscurePassword.value
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: controller.togglePassword,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+              // Password
+              Obx(() => AppTextField(
+                    controller: c.passwordCtrl,
+                    label: AppStrings.password,
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: c.obscurePassword.value,
+                    suffixIcon: IconButton(
+                      icon: Icon(c.obscurePassword.value
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: c.togglePassword,
                     ),
                   )),
 
-              const SizedBox(height: 8),
-
-              /// FORGOT PASSWORD
+              // Forgot password
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {
-                    // TODO: forgot password page
-                  },
-                  child: const Text('Forgot password?'),
+                  onPressed: () {}, // TODO
+                  child: const Text(AppStrings.forgotPassword,
+                      style: TextStyle(color: AppColors.primary)),
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSizes.sm),
 
-              /// LOGIN BUTTON
-              Obx(() => SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed:
-                          controller.isLoading.value ? null : controller.login,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigo,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: controller.isLoading.value
-                          ? const SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'Login',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
+              // Login button
+              Obx(() => AppButton(
+                    label: AppStrings.login,
+                    onTap: c.login,
+                    isLoading: c.isLoading.value,
                   )),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSizes.xl),
 
-              /// OR DIVIDER
-              Row(
-                children: const [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text('OR'),
-                  ),
-                  Expanded(child: Divider()),
-                ],
-              ),
+              // Divider
+              Row(children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
+                  child: Text('OR', style: TextStyle(color: AppColors.grey400)),
+                ),
+                const Expanded(child: Divider()),
+              ]),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSizes.xl),
 
-              /// GOOGLE LOGIN (future)
+              // Google
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: AppSizes.buttonMd,
                 child: OutlinedButton.icon(
                   icon: Image.network(
-                    'https://developers.google.com/identity/images/g-logo.png',
-                    height: 20,
-                  ),
-                  label: const Text('Continue with Google'),
-                  onPressed: () {
-                    // TODO: Google auth
-                  },
+                      'https://developers.google.com/identity/images/g-logo.png',
+                      height: 20,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.g_mobiledata)),
+                  label: const Text(AppStrings.continueGoogle),
+                  onPressed: () {}, // TODO
                   style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.grey200),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusMd)),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: AppSizes.xxxl),
 
-              /// REGISTER LINK
+              // Register link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account? "),
+                  const Text(AppStrings.noAccount),
                   GestureDetector(
-                    onTap: () {
-                      Get.offAndToNamed(AppRoutes.register);
-                    },
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(
-                        color: Colors.indigo,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    onTap: () => Get.offAndToNamed(AppRoutes.register),
+                    child: const Text(AppStrings.register,
+                        style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700)),
                   ),
                 ],
               ),

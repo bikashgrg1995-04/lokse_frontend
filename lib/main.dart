@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:lokse/core/network/getx_network_manager.dart';
 import 'package:lokse/core/utils/dio_client.dart';
-
-import 'app/lokse_app.dart';
+import 'app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await GetStorage.init();
-  // Initialize DioClient
-  DioClient.init();
 
-  // Initialize Network Manager
-  Get.put(GetXNetworkManager());
+  // Lock to portrait
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  // Status bar style
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+  ));
+
+  await GetStorage.init();
+  DioClient.init();
 
   runApp(const LokseApp());
 }

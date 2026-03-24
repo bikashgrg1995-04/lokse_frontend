@@ -8,12 +8,12 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<ProfileController>();
+    final profileController = Get.put(ProfileController());
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: Obx(() {
-        final profile = controller.profile;
+        final profile = profileController.profile;
         if (profile == null) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -89,13 +89,13 @@ class ProfilePage extends StatelessWidget {
                           bottom: 0,
                           right: -4,
                           child: GestureDetector(
-                            onTap: controller.isUpdating.value
+                            onTap: profileController.isUpdating.value
                                 ? null
-                                : controller.updateProfileImage,
+                                : profileController.updateProfileImage,
                             child: CircleAvatar(
                               radius: 16,
                               backgroundColor: Colors.blue,
-                              child: controller.isUpdating.value
+                              child: profileController.isUpdating.value
                                   ? const SizedBox(
                                       width: 12,
                                       height: 12,
@@ -206,7 +206,7 @@ class ProfilePage extends StatelessWidget {
                           const Icon(Icons.email_outlined,
                               color: Colors.grey, size: 20),
                           const SizedBox(width: 8),
-                          Text(profile.email ?? "Not set"),
+                          Text(profile.email),
                         ],
                       ),
                     ],
@@ -262,10 +262,7 @@ class _SettingsTile extends StatelessWidget {
   final VoidCallback onTap;
 
   const _SettingsTile(
-      {super.key,
-      required this.icon,
-      required this.title,
-      required this.onTap});
+      {required this.icon, required this.title, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

@@ -1,77 +1,96 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lokse/core/constants/app_colors.dart';
+import 'package:lokse/core/constants/app_sizes.dart';
+import 'package:lokse/core/constants/app_strings.dart';
+import 'package:lokse/core/utils/global_controller.dart';
 import 'package:lokse/modules/auth/profile/profile_controller.dart';
+import 'package:lokse/widgets/common_widgets.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final ProfileController profileController = Get.find<ProfileController>();
+    final profile = Get.find<ProfileController>();
+    final gc = GlobalController.instance;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FB),
+      backgroundColor: AppColors.scaffold,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── HEADER ──────────────────────────────────────────────
-              _Header(profileController: profileController),
+              // Header
+              _HomeHeader(profile: profile, gc: gc),
 
-              // ── STATS ROW ────────────────────────────────────────────
+              // Stats row — live from GlobalController
               Transform.translate(
                 offset: const Offset(0, -20),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: const [
-                      Expanded(
-                          child: _StatCard(
-                              value: '12',
-                              label: 'Day Streak',
-                              color: Color(0xFF1E3EBF))),
-                      SizedBox(width: 10),
-                      Expanded(
-                          child: _StatCard(
-                              value: '74%',
-                              label: 'Accuracy',
-                              color: Color(0xFF059669))),
-                      SizedBox(width: 10),
-                      Expanded(
-                          child: _StatCard(
-                              value: '320',
-                              label: 'XP Points',
-                              color: Color(0xFFD97706))),
-                    ],
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+                  child: Obx(() => Row(
+                        children: [
+                          Expanded(
+                              child: _StatCard(
+                                  value: '${gc.currentStreak.value}',
+                                  label: AppStrings.dayStreak,
+                                  color: AppColors.primary)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                              child: _StatCard(
+                                  value: gc.accuracyPct,
+                                  label: AppStrings.accuracy,
+                                  color: AppColors.success)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                              child: _StatCard(
+                                  value: '${gc.totalCoins.value}',
+                                  label: AppStrings.coins,
+                                  color: AppColors.mediumDark)),
+                        ],
+                      )),
                 ),
               ),
 
-              // ── DAILY CHALLENGE ──────────────────────────────────────
+              // Daily challenge
               Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 14),
-                child: _DailyChallenge(),
+                padding: const EdgeInsets.only(
+                    left: AppSizes.lg, right: AppSizes.lg, bottom: AppSizes.lg),
+                child: _DailyChallenge(gc: gc),
               ),
 
-              // ── STREAK TRACKER ───────────────────────────────────────
+              // Streak tracker
               Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 14),
-                child: _StreakTracker(),
+                padding: const EdgeInsets.only(
+                    left: AppSizes.lg, right: AppSizes.lg, bottom: AppSizes.lg),
+                child:
+                    Obx(() => _StreakTracker(streak: gc.currentStreak.value)),
               ),
 
-              // ── FEATURED TOPICS ──────────────────────────────────────
-              _SectionHeader(title: 'Featured Topics', onTap: () {}),
-              Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 14),
+              // Featured topics
+              SectionHeader(
+                  title: AppStrings.featuredTopics,
+                  actionLabel: AppStrings.seeAll,
+                  onAction: () {}),
+              const Padding(
+                padding: EdgeInsets.only(
+                    left: AppSizes.lg, right: AppSizes.lg, bottom: AppSizes.lg),
                 child: _FeaturedTopics(),
               ),
 
-              // ── ANNOUNCEMENTS ────────────────────────────────────────
-              _SectionHeader(title: 'Announcements', onTap: () {}),
-              Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
+              // Announcements
+              SectionHeader(
+                  title: AppStrings.announcements,
+                  actionLabel: AppStrings.seeAll,
+                  onAction: () {}),
+              const Padding(
+                padding: EdgeInsets.only(
+                    left: AppSizes.lg,
+                    right: AppSizes.lg,
+                    bottom: AppSizes.xxl),
                 child: _Announcements(),
               ),
             ],
@@ -82,17 +101,16 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// HEADER
-// ═══════════════════════════════════════════════════════════════
-class _Header extends StatelessWidget {
-  final ProfileController profileController;
-  const _Header({required this.profileController});
+// ── HEADER ────────────────────────────────────────────────────
+class _HomeHeader extends StatelessWidget {
+  final ProfileController profile;
+  final GlobalController gc;
+  const _HomeHeader({required this.profile, required this.gc});
 
   String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
     return 'Good evening';
   }
 
@@ -100,18 +118,12 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 44),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF1E3EBF), Color(0xFF4F6EF7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      padding:
+          const EdgeInsets.fromLTRB(AppSizes.xl, AppSizes.xxl, AppSizes.xl, 44),
+      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Decorative circles
           Positioned(
             top: -30,
             right: -30,
@@ -119,98 +131,85 @@ class _Header extends StatelessWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
-                shape: BoxShape.circle,
-              ),
+                  color: AppColors.white.withOpacity(0.06),
+                  shape: BoxShape.circle),
             ),
           ),
-          Positioned(
-            bottom: -20,
-            right: 40,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-
-          // Content
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Obx(() {
-                  final profile = profileController.profile;
-                  final name = profile?.fullName ?? 'Guest';
+                  final name = profile.profile?.fullName ?? 'Guest';
+                  final tier = gc.xpTier;
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _greeting(),
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 13,
-                        ),
-                      ),
+                      Text(_greeting(),
+                          style: const TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w400)
+                              .copyWith(
+                                  color: AppColors.white.withOpacity(0.65))),
                       const SizedBox(height: 2),
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      Text(name,
+                          style: const TextStyle(
+                              color: AppColors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700)),
                       const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Container(
+                      Row(children: [
+                        Container(
                             width: 6,
                             height: 6,
                             decoration: const BoxDecoration(
-                              color: Color(0xFF4ADE80),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            'Loksewa Aspirant',
+                                color: Color(0xFF4ADE80),
+                                shape: BoxShape.circle)),
+                        const SizedBox(width: 6),
+                        Text(AppStrings.aspirant,
                             style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 12,
-                            ),
+                                color: AppColors.white.withOpacity(0.55),
+                                fontSize: 12)),
+                        const SizedBox(width: 10),
+                        // XP tier badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withOpacity(0.15),
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusFull),
                           ),
-                        ],
-                      ),
+                          child: Text(tier,
+                              style: const TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                      ]),
                     ],
                   );
                 }),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSizes.md),
+              // Avatar
               Obx(() {
-                final profile = profileController.profile;
-                final imageUrl = profile?.profileImageUrl ?? '';
-                final initials = (profile?.fullName.isNotEmpty == true)
-                    ? profile!.fullName[0].toUpperCase()
+                final imageUrl = profile.profile?.profileImageUrl ?? '';
+                final initials = (profile.profile?.fullName.isNotEmpty == true)
+                    ? profile.profile!.fullName[0].toUpperCase()
                     : 'U';
                 return CircleAvatar(
                   radius: 24,
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: AppColors.white.withOpacity(0.2),
                   backgroundImage: imageUrl.isNotEmpty
                       ? CachedNetworkImageProvider(imageUrl)
                       : null,
                   child: imageUrl.isEmpty
-                      ? Text(
-                          initials,
+                      ? Text(initials,
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 18,
-                          ),
-                        )
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18))
                       : null,
                 );
               }),
@@ -222,151 +221,101 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// STAT CARD
-// ═══════════════════════════════════════════════════════════════
+// ── STAT CARD ─────────────────────────────────────────────────
 class _StatCard extends StatelessWidget {
-  final String value;
-  final String label;
+  final String value, label;
   final Color color;
-
-  const _StatCard({
-    required this.value,
-    required this.label,
-    required this.color,
-  });
+  const _StatCard(
+      {required this.value, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+      padding: const EdgeInsets.symmetric(
+          vertical: AppSizes.md, horizontal: AppSizes.sm),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black.withOpacity(0.07), width: 0.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        border: Border.all(color: AppColors.cardBorder, width: 0.5),
       ),
       child: Column(
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          Text(value,
+              style: TextStyle(
+                  color: color, fontSize: 20, fontWeight: FontWeight.w700)),
           const SizedBox(height: 3),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 11,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          Text(label,
+              style: const TextStyle(color: AppColors.grey400, fontSize: 11),
+              textAlign: TextAlign.center),
         ],
       ),
     );
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// DAILY CHALLENGE
-// ═══════════════════════════════════════════════════════════════
+// ── DAILY CHALLENGE ───────────────────────────────────────────
 class _DailyChallenge extends StatelessWidget {
+  final GlobalController gc;
+  const _DailyChallenge({required this.gc});
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSizes.lg + 2),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1E3EBF), Color(0xFF4F6EF7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.circular(AppSizes.radiusXl),
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            right: -10,
-            bottom: -10,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.07),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'DAILY CHALLENGE',
-                style: TextStyle(
-                  color: Colors.white60,
+          const Text(AppStrings.dailyChallenge,
+              style: TextStyle(
+                  color: AppColors.white,
                   fontSize: 11,
                   letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                "Complete today's quiz set",
-                style: TextStyle(
-                  color: Colors.white,
+                  fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          const Text(AppStrings.todayQuizSet,
+              style: TextStyle(
+                  color: AppColors.white,
                   fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                 ),
+                child: const Text('15 questions left',
+                    style: TextStyle(color: AppColors.white, fontSize: 12)),
               ),
-              const SizedBox(height: 14),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      '15 questions left',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      // TODO: navigate to quiz
-                    },
+              // Daily reward claim button
+              Obx(() => GestureDetector(
+                    onTap: gc.canClaimDaily.value ? gc.claimDailyReward : () {},
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 7),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                       ),
-                      child: const Text(
-                        'Start now',
-                        style: TextStyle(
-                          color: Color(0xFF1E3EBF),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Text(
+                        gc.canClaimDaily.value
+                            ? 'Claim +50 🪙'
+                            : AppStrings.startNow,
+                        style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  )),
             ],
           ),
         ],
@@ -375,41 +324,30 @@ class _DailyChallenge extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// STREAK TRACKER
-// ═══════════════════════════════════════════════════════════════
+// ── STREAK TRACKER ────────────────────────────────────────────
 class _StreakTracker extends StatelessWidget {
+  final int streak;
+  const _StreakTracker({required this.streak});
+
   static const _days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   @override
   Widget build(BuildContext context) {
-    // Assume today is Friday (index 4), so first 5 days are complete
-    const completedDays = 5;
+    final completedDays = (streak % 7).clamp(0, 7);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withOpacity(0.07), width: 0.5),
-      ),
+    return AppCard(
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'This week',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-              Text(
-                '12 day streak 🔥',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.orange.shade700,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              const Text(AppStrings.thisWeek,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              Text('$streak day streak 🔥',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.mediumDark,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
           const SizedBox(height: 14),
@@ -423,26 +361,18 @@ class _StreakTracker extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: done
-                          ? const Color(0xFF1E3EBF)
-                          : const Color(0xFFF0F0F0),
+                      color: done ? AppColors.primary : AppColors.grey100,
                       shape: BoxShape.circle,
                     ),
-                    child: Center(
-                      child: done
-                          ? const Icon(Icons.check,
-                              color: Colors.white, size: 14)
-                          : null,
-                    ),
+                    child: done
+                        ? const Icon(Icons.check,
+                            color: AppColors.white, size: 14)
+                        : null,
                   ),
                   const SizedBox(height: 5),
-                  Text(
-                    _days[i],
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
+                  Text(_days[i],
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.grey400)),
                 ],
               );
             }),
@@ -453,35 +383,19 @@ class _StreakTracker extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// FEATURED TOPICS
-// ═══════════════════════════════════════════════════════════════
+// ── FEATURED TOPICS ───────────────────────────────────────────
 class _FeaturedTopics extends StatelessWidget {
+  const _FeaturedTopics();
+
   static const _topics = [
-    _TopicData(
-        label: 'General Knowledge',
-        icon: Icons.public,
-        progress: 0.65,
-        color: Color(0xFF1E3EBF),
-        bg: Color(0xFFEEF1FB)),
-    _TopicData(
-        label: 'Nepali History',
-        icon: Icons.history_edu,
-        progress: 0.40,
-        color: Color(0xFF059669),
-        bg: Color(0xFFECFDF5)),
-    _TopicData(
-        label: 'Arithmetic',
-        icon: Icons.calculate,
-        progress: 0.55,
-        color: Color(0xFFD97706),
-        bg: Color(0xFFFFFBEB)),
-    _TopicData(
-        label: 'Constitution',
-        icon: Icons.account_balance,
-        progress: 0.30,
-        color: Color(0xFF7C3AED),
-        bg: Color(0xFFF5F3FF)),
+    _Topic('General Knowledge', Icons.public, 0.65, AppColors.primary,
+        AppColors.primarySurface),
+    _Topic('Nepali History', Icons.history_edu, 0.40, AppColors.success,
+        AppColors.successSurface),
+    _Topic('Arithmetic', Icons.calculate, 0.55, AppColors.mediumDark,
+        AppColors.mediumSurface),
+    _Topic('Constitution', Icons.account_balance, 0.30, AppColors.bossDark,
+        AppColors.bossSurface),
   ];
 
   @override
@@ -498,76 +412,51 @@ class _FeaturedTopics extends StatelessWidget {
   }
 }
 
-class _TopicData {
+class _Topic {
   final String label;
   final IconData icon;
   final double progress;
-  final Color color;
-  final Color bg;
-
-  const _TopicData({
-    required this.label,
-    required this.icon,
-    required this.progress,
-    required this.color,
-    required this.bg,
-  });
+  final Color color, bg;
+  const _Topic(this.label, this.icon, this.progress, this.color, this.bg);
 }
 
 class _TopicCard extends StatelessWidget {
-  final _TopicData topic;
+  final _Topic topic;
   const _TopicCard({required this.topic});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {}, // TODO: navigate to topic
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.black.withOpacity(0.07), width: 0.5),
-        ),
+      onTap: () {},
+      child: AppCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                color: topic.bg,
-                borderRadius: BorderRadius.circular(8),
-              ),
+                  color: topic.bg,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusSm)),
               child: Icon(topic.icon, color: topic.color, size: 18),
             ),
             const Spacer(),
-            Text(
-              topic.label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+            Text(topic.label,
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis),
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value: topic.progress,
-                minHeight: 4,
-                backgroundColor: const Color(0xFFF0F0F0),
-                color: topic.color,
-              ),
+                  value: topic.progress,
+                  minHeight: 4,
+                  backgroundColor: AppColors.grey100,
+                  color: topic.color),
             ),
             const SizedBox(height: 4),
-            Text(
-              '${(topic.progress * 100).toInt()}% complete',
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.grey,
-              ),
-            ),
+            Text('${(topic.progress * 100).toInt()}% complete',
+                style: const TextStyle(fontSize: 10, color: AppColors.grey400)),
           ],
         ),
       ),
@@ -575,148 +464,73 @@ class _TopicCard extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ANNOUNCEMENTS
-// ═══════════════════════════════════════════════════════════════
+// ── ANNOUNCEMENTS ─────────────────────────────────────────────
 class _Announcements extends StatelessWidget {
-  static const _items = [
-    _AnnouncementData(
-        title: 'New mock test added',
-        subtitle: 'Lok Sewa PSC — Officer Level',
-        tag: 'New',
-        tagColor: Color(0xFF1E3EBF),
-        tagBg: Color(0xFFEEF1FB)),
-    _AnnouncementData(
-        title: 'Result published',
-        subtitle: 'Section Officer Written — 2080',
-        tag: 'Result',
-        tagColor: Color(0xFF059669),
-        tagBg: Color(0xFFECFDF5)),
-  ];
+  const _Announcements();
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: _items
-          .map((a) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _AnnouncementCard(data: a),
-              ))
-          .toList(),
+      children: const [
+        _AnnouncementCard(
+            title: 'New mock test added',
+            subtitle: 'Lok Sewa PSC — Officer Level',
+            tag: 'New',
+            tagColor: AppColors.primary,
+            tagBg: AppColors.primarySurface),
+        SizedBox(height: 8),
+        _AnnouncementCard(
+            title: 'Result published',
+            subtitle: 'Section Officer Written — 2080',
+            tag: 'Result',
+            tagColor: AppColors.success,
+            tagBg: AppColors.successSurface),
+      ],
     );
   }
-}
-
-class _AnnouncementData {
-  final String title;
-  final String subtitle;
-  final String tag;
-  final Color tagColor;
-  final Color tagBg;
-
-  const _AnnouncementData({
-    required this.title,
-    required this.subtitle,
-    required this.tag,
-    required this.tagColor,
-    required this.tagBg,
-  });
 }
 
 class _AnnouncementCard extends StatelessWidget {
-  final _AnnouncementData data;
-  const _AnnouncementCard({required this.data});
+  final String title, subtitle, tag;
+  final Color tagColor, tagBg;
+  const _AnnouncementCard(
+      {required this.title,
+      required this.subtitle,
+      required this.tag,
+      required this.tagColor,
+      required this.tagBg});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {}, // TODO: navigate to announcement detail
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.black.withOpacity(0.07), width: 0.5),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    data.title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    data.subtitle,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: data.tagBg,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                data.tag,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: data.tagColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SECTION HEADER HELPER
-// ═══════════════════════════════════════════════════════════════
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final VoidCallback onTap;
-
-  const _SectionHeader({required this.title, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+    return AppCard(
+      onTap: () {},
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.grey400)),
+              ],
             ),
           ),
-          GestureDetector(
-            onTap: onTap,
-            child: const Text(
-              'See all',
-              style: TextStyle(
-                fontSize: 12,
-                color: Color(0xFF1E3EBF),
-              ),
-            ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+                color: tagBg,
+                borderRadius: BorderRadius.circular(AppSizes.radiusSm - 2)),
+            child: Text(tag,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: tagColor)),
           ),
         ],
       ),
