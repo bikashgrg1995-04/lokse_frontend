@@ -4,6 +4,7 @@ import 'package:lokse/core/constants/app_colors.dart';
 import 'package:lokse/core/constants/app_strings.dart';
 import 'package:lokse/core/utils/global_controller.dart';
 import 'package:lokse/modules/auth/login/login_page.dart';
+import 'package:lokse/modules/auth/profile/profile_controller.dart';
 import 'package:lokse/modules/auth/profile/profile_page.dart';
 import 'package:lokse/modules/home/home_page.dart';
 import 'package:lokse/modules/learn/learn_page.dart';
@@ -17,6 +18,9 @@ class NavigationPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final nav = Get.put(NavigationController());
     final auth = GlobalController.instance;
+
+    // Put ProfileController ONCE here — HomePage, ProfilePage both use Get.find
+    Get.put(ProfileController(), permanent: false);
 
     final argIndex = Get.arguments;
     if (argIndex is int) nav.setIndex(argIndex);

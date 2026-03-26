@@ -19,92 +19,86 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              _HomeHeader(profile: profile, gc: gc),
+        child: Obx(() {
+          // ✅ OPTIONAL loading state
+          if (profile.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-              // Stats row — live from GlobalController
-              Transform.translate(
-                offset: const Offset(0, -20),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
-                  child: Obx(() => Row(
-                        children: [
-                          Expanded(
-                              child: _StatCard(
-                                  value: '${gc.currentStreak.value}',
-                                  label: AppStrings.dayStreak,
-                                  color: AppColors.primary)),
-                          const SizedBox(width: 10),
-                          Expanded(
-                              child: _StatCard(
-                                  value: gc.accuracyPct,
-                                  label: AppStrings.accuracy,
-                                  color: AppColors.success)),
-                          const SizedBox(width: 10),
-                          Expanded(
-                              child: _StatCard(
-                                  value: '${gc.totalCoins.value}',
-                                  label: AppStrings.coins,
-                                  color: AppColors.mediumDark)),
-                        ],
-                      )),
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _HomeHeader(profile: profile, gc: gc),
+                Transform.translate(
+                  offset: const Offset(0, -20),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+                    child: Obx(() => Row(
+                          children: [
+                            Expanded(
+                                child: _StatCard(
+                                    value: '${gc.currentStreak.value}',
+                                    label: AppStrings.dayStreak,
+                                    color: AppColors.primary)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: _StatCard(
+                                    value: gc.accuracyPct,
+                                    label: AppStrings.accuracy,
+                                    color: AppColors.success)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: _StatCard(
+                                    value: '${gc.totalCoins.value}',
+                                    label: AppStrings.coins,
+                                    color: AppColors.mediumDark)),
+                          ],
+                        )),
+                  ),
                 ),
-              ),
-
-              // Daily challenge
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: AppSizes.lg, right: AppSizes.lg, bottom: AppSizes.lg),
-                child: _DailyChallenge(gc: gc),
-              ),
-
-              // Streak tracker
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: AppSizes.lg, right: AppSizes.lg, bottom: AppSizes.lg),
-                child:
-                    Obx(() => _StreakTracker(streak: gc.currentStreak.value)),
-              ),
-
-              // Featured topics
-              SectionHeader(
-                  title: AppStrings.featuredTopics,
-                  actionLabel: AppStrings.seeAll,
-                  onAction: () {}),
-              const Padding(
-                padding: EdgeInsets.only(
-                    left: AppSizes.lg, right: AppSizes.lg, bottom: AppSizes.lg),
-                child: _FeaturedTopics(),
-              ),
-
-              // Announcements
-              SectionHeader(
-                  title: AppStrings.announcements,
-                  actionLabel: AppStrings.seeAll,
-                  onAction: () {}),
-              const Padding(
-                padding: EdgeInsets.only(
-                    left: AppSizes.lg,
-                    right: AppSizes.lg,
-                    bottom: AppSizes.xxl),
-                child: _Announcements(),
-              ),
-            ],
-          ),
-        ),
+                Padding(
+                  padding: const EdgeInsets.all(AppSizes.lg),
+                  child: _DailyChallenge(gc: gc),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+                  child:
+                      Obx(() => _StreakTracker(streak: gc.currentStreak.value)),
+                ),
+                SectionHeader(
+                    title: AppStrings.featuredTopics,
+                    actionLabel: AppStrings.seeAll,
+                    onAction: () {}),
+                const Padding(
+                  padding: EdgeInsets.all(AppSizes.lg),
+                  child: _FeaturedTopics(),
+                ),
+                SectionHeader(
+                    title: AppStrings.announcements,
+                    actionLabel: AppStrings.seeAll,
+                    onAction: () {}),
+                const Padding(
+                  padding: EdgeInsets.only(
+                      left: AppSizes.lg,
+                      right: AppSizes.lg,
+                      bottom: AppSizes.xxl),
+                  child: _Announcements(),
+                ),
+              ],
+            ),
+          );
+        }),
       ),
     );
   }
 }
 
-// ── HEADER ────────────────────────────────────────────────────
 class _HomeHeader extends StatelessWidget {
   final ProfileController profile;
   final GlobalController gc;
+
   const _HomeHeader({required this.profile, required this.gc});
 
   String _greeting() {
@@ -116,112 +110,91 @@ class _HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding:
-          const EdgeInsets.fromLTRB(AppSizes.xl, AppSizes.xxl, AppSizes.xl, 44),
-      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            top: -30,
-            right: -30,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.06),
-                  shape: BoxShape.circle),
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: Obx(() {
-                  final name = profile.profile?.fullName ?? 'Guest';
-                  final tier = gc.xpTier;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return Obx(() {
+      final p = profile.rxProfile.value;
+
+      final name = p?.fullName ?? 'Guest';
+      final imageUrl = p?.profileImageUrl ?? '';
+      final initials = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(
+            AppSizes.xl, AppSizes.xxl, AppSizes.xl, 44),
+        decoration: const BoxDecoration(
+          gradient: AppColors.primaryGradient,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_greeting(),
+                      style: TextStyle(
+                          color: AppColors.white.withOpacity(0.65),
+                          fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text(name,
+                      style: const TextStyle(
+                          color: AppColors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                  Row(
                     children: [
-                      Text(_greeting(),
-                          style: const TextStyle(
-                                  color: AppColors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w400)
-                              .copyWith(
-                                  color: AppColors.white.withOpacity(0.65))),
-                      const SizedBox(height: 2),
-                      Text(name,
-                          style: const TextStyle(
-                              color: AppColors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 6),
-                      Row(children: [
-                        Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                                color: Color(0xFF4ADE80),
-                                shape: BoxShape.circle)),
-                        const SizedBox(width: 6),
-                        Text(AppStrings.aspirant,
-                            style: TextStyle(
-                                color: AppColors.white.withOpacity(0.55),
-                                fontSize: 12)),
-                        const SizedBox(width: 10),
-                        // XP tier badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.white.withOpacity(0.15),
-                            borderRadius:
-                                BorderRadius.circular(AppSizes.radiusFull),
-                          ),
-                          child: Text(tier,
-                              style: const TextStyle(
-                                  color: AppColors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600)),
+                      const Icon(Icons.circle,
+                          size: 6, color: Color(0xFF4ADE80)),
+                      const SizedBox(width: 6),
+                      Text(AppStrings.aspirant,
+                          style: TextStyle(
+                              color: AppColors.white.withOpacity(0.55),
+                              fontSize: 12)),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.white.withOpacity(0.15),
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusFull),
                         ),
-                      ]),
+                        child: Text(gc.xpTier,
+                            style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600)),
+                      ),
                     ],
-                  );
-                }),
+                  ),
+                ],
               ),
-              const SizedBox(width: AppSizes.md),
-              // Avatar
-              Obx(() {
-                final imageUrl = profile.profile?.profileImageUrl ?? '';
-                final initials = (profile.profile?.fullName.isNotEmpty == true)
-                    ? profile.profile!.fullName[0].toUpperCase()
-                    : 'U';
-                return CircleAvatar(
-                  radius: 24,
-                  backgroundColor: AppColors.white.withOpacity(0.2),
-                  backgroundImage: imageUrl.isNotEmpty
-                      ? CachedNetworkImageProvider(imageUrl)
-                      : null,
-                  child: imageUrl.isEmpty
-                      ? Text(initials,
-                          style: const TextStyle(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 18))
-                      : null,
-                );
-              }),
-            ],
-          ),
-        ],
-      ),
-    );
+            ),
+
+            const SizedBox(width: AppSizes.md),
+
+            // ✅ FIXED Avatar
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: AppColors.white.withOpacity(0.2),
+              backgroundImage: imageUrl.isNotEmpty
+                  ? CachedNetworkImageProvider(imageUrl)
+                  : null,
+              child: imageUrl.isEmpty
+                  ? Text(initials,
+                      style: const TextStyle(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18))
+                  : null,
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
 
-// ── STAT CARD ─────────────────────────────────────────────────
 class _StatCard extends StatelessWidget {
   final String value, label;
   final Color color;
@@ -253,7 +226,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ── DAILY CHALLENGE ───────────────────────────────────────────
 class _DailyChallenge extends StatelessWidget {
   final GlobalController gc;
   const _DailyChallenge({required this.gc});
@@ -263,9 +235,8 @@ class _DailyChallenge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.lg + 2),
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-      ),
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(AppSizes.radiusXl)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -289,22 +260,20 @@ class _DailyChallenge extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                ),
+                    color: AppColors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusSm)),
                 child: const Text('15 questions left',
                     style: TextStyle(color: AppColors.white, fontSize: 12)),
               ),
-              // Daily reward claim button
               Obx(() => GestureDetector(
                     onTap: gc.canClaimDaily.value ? gc.claimDailyReward : () {},
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 7),
                       decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                      ),
+                          color: AppColors.white,
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusSm)),
                       child: Text(
                         gc.canClaimDaily.value
                             ? 'Claim +50 🪙'
@@ -324,17 +293,14 @@ class _DailyChallenge extends StatelessWidget {
   }
 }
 
-// ── STREAK TRACKER ────────────────────────────────────────────
 class _StreakTracker extends StatelessWidget {
   final int streak;
   const _StreakTracker({required this.streak});
-
   static const _days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   @override
   Widget build(BuildContext context) {
     final completedDays = (streak % 7).clamp(0, 7);
-
     return AppCard(
       child: Column(
         children: [
@@ -344,7 +310,7 @@ class _StreakTracker extends StatelessWidget {
               const Text(AppStrings.thisWeek,
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               Text('$streak day streak 🔥',
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.mediumDark,
                       fontWeight: FontWeight.w500)),
@@ -361,9 +327,8 @@ class _StreakTracker extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: done ? AppColors.primary : AppColors.grey100,
-                      shape: BoxShape.circle,
-                    ),
+                        color: done ? AppColors.primary : AppColors.grey100,
+                        shape: BoxShape.circle),
                     child: done
                         ? const Icon(Icons.check,
                             color: AppColors.white, size: 14)
@@ -383,10 +348,8 @@ class _StreakTracker extends StatelessWidget {
   }
 }
 
-// ── FEATURED TOPICS ───────────────────────────────────────────
 class _FeaturedTopics extends StatelessWidget {
   const _FeaturedTopics();
-
   static const _topics = [
     _Topic('General Knowledge', Icons.public, 0.65, AppColors.primary,
         AppColors.primarySurface),
@@ -464,14 +427,13 @@ class _TopicCard extends StatelessWidget {
   }
 }
 
-// ── ANNOUNCEMENTS ─────────────────────────────────────────────
 class _Announcements extends StatelessWidget {
   const _Announcements();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: const [
+    return const Column(
+      children: [
         _AnnouncementCard(
             title: 'New mock test added',
             subtitle: 'Lok Sewa PSC — Officer Level',

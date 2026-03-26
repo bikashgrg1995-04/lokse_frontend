@@ -10,18 +10,15 @@ import 'package:lokse/core/utils/status_message.dart';
 import 'package:lokse/modules/auth/profile/profile_model.dart';
 
 class ProfileController extends GetxController {
-  // Profile state
+  // ================= STATE =================
   final rxProfile = Rxn<ProfileModel>();
 
-  // UI states
   final isLoading = false.obs;
   final isUpdating = false.obs;
 
-  // Form controllers
+  // ================= FORM =================
   final fullNameController = TextEditingController();
   final phoneController = TextEditingController();
-
-  ProfileModel? get profile => rxProfile.value;
 
   @override
   void onInit() {
@@ -37,7 +34,7 @@ class ProfileController extends GetxController {
     });
   }
 
-  // ================= FETCH PROFILE =================
+  // ================= FETCH =================
   Future<void> fetchProfile() async {
     isLoading.value = true;
     try {
@@ -45,7 +42,6 @@ class ProfileController extends GetxController {
 
       rxProfile.value = ProfileModel.fromJson({
         ...res.data,
-        // Use the full URL for images
         "profile_image_url":
             "${res.data['profile_image_url']}?t=${DateTime.now().millisecondsSinceEpoch}",
       });
@@ -56,9 +52,9 @@ class ProfileController extends GetxController {
     }
   }
 
-  // ================= UPDATE NAME / PHONE =================
+  // ================= UPDATE INFO =================
   Future<void> updateProfile() async {
-    if (profile == null) return;
+    if (rxProfile.value == null) return;
 
     isUpdating.value = true;
     try {
@@ -70,7 +66,7 @@ class ProfileController extends GetxController {
         },
       );
 
-      rxProfile.value = profile!.copyWith(
+      rxProfile.value = rxProfile.value!.copyWith(
         fullName: res.data['full_name'],
         phoneNumber: res.data['phone_number'],
         profileImageUrl:
@@ -86,7 +82,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  // ================= UPDATE PROFILE IMAGE =================
+  // ================= UPDATE IMAGE =================
   Future<void> updateProfileImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
@@ -111,8 +107,7 @@ class ProfileController extends GetxController {
         ),
       );
 
-      // Update the full URL for the image
-      rxProfile.value = profile!.copyWith(
+      rxProfile.value = rxProfile.value!.copyWith(
         profileImageUrl:
             "${res.data['profile_image_url']}?t=${DateTime.now().millisecondsSinceEpoch}",
         isVerified: res.data['is_verified'],
