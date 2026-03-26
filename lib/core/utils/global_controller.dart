@@ -8,13 +8,6 @@ import 'package:lokse/core/utils/dio_client.dart';
 import 'package:lokse/core/utils/status_message.dart';
 import 'package:lokse/routes/app_routes.dart';
 
-/// 🌍 GlobalController — single permanent controller for app-wide state.
-///
-/// XP, coins, streak — all reactive. Any page can read:
-///   GlobalController.instance.totalXp.value
-///
-/// QuizController calls onQuizComplete() after every level.
-/// LearnController calls onSubjectUnlocked() after spending coins.
 class GlobalController extends GetxController {
   static GlobalController get instance => Get.find<GlobalController>();
 
@@ -23,11 +16,11 @@ class GlobalController extends GetxController {
   // ── Auth ──────────────────────────────────────────────
   final isLoggedIn = false.obs;
 
-  // ── Game state (reactive — UI updates instantly) ──────
+  // ── Game state ────────────────────────────────────────
   final totalXp = 0.obs;
   final totalCoins = 1240.obs;
   final currentStreak = 0.obs;
-  final accuracy = 0.0.obs; // 0.0–1.0 rolling average
+  final accuracy = 0.0.obs;
 
   // ── Daily reward ──────────────────────────────────────
   final canClaimDaily = false.obs;
@@ -36,7 +29,7 @@ class GlobalController extends GetxController {
   final userName = ''.obs;
   final userEmail = ''.obs;
 
-  // ── Convenience getters ───────────────────────────────
+  // ── Getters ───────────────────────────────────────────
   String get accuracyPct => '${(accuracy.value * 100).toInt()}%';
   String get streakLabel => '${currentStreak.value} day streak 🔥';
   String get xpTier {
@@ -52,25 +45,30 @@ class GlobalController extends GetxController {
   void onInit() {
     super.onInit();
     _loadFromStorage();
-    checkLogin();
     _checkDailyClaim();
+    // ⚠️  Do NOT call checkLogin() here.
+    // SplashController awaits checkLogin() before navigating,
+    // so we avoid a duplicate async call and a race condition.
   }
 
   // ══════════════════════════════════════════════════════
   // AUTH
   // ══════════════════════════════════════════════════════
 
-  Future<void> checkLogin() async {
+  /// Returns true if the user ends up authenticated.
+  /// Called by SplashController (awaited) before navigation.
+  Future<bool> checkLogin() async {
     final access = await TokenStorage.getAccessToken();
     final refresh = await TokenStorage.getRefreshToken();
 
     if (access == null || access.isEmpty) {
       isLoggedIn.value = false;
-      return;
+      return false;
     }
+
     try {
       final parts = access.split('.');
-      if (parts.length != 3) throw Exception('bad token');
+      if (parts.length != 3) throw Exception('malformed token');
 
       final payload = jsonDecode(
         utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
@@ -79,15 +77,25 @@ class GlobalController extends GetxController {
       final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
       if (exp != null && now < exp) {
+        // Access token still valid
         isLoggedIn.value = true;
-      } else if (refresh != null) {
-        isLoggedIn.value = await DioClient.refreshToken();
+        return true;
+      } else if (refresh != null && refresh.isNotEmpty) {
+        // Try to refresh
+        final ok = await DioClient.refreshToken();
+        isLoggedIn.value = ok;
+        if (!ok) await TokenStorage.clear();
+        return ok;
       } else {
-        await _forceLogout(navigate: false);
+        await TokenStorage.clear();
+        isLoggedIn.value = false;
+        return false;
       }
     } catch (e) {
       appLog.e('checkLogin error: $e');
-      await _forceLogout(navigate: false);
+      await TokenStorage.clear();
+      isLoggedIn.value = false;
+      return false;
     }
   }
 
@@ -104,7 +112,10 @@ class GlobalController extends GetxController {
     await TokenStorage.clear();
     _clearUserData();
     isLoggedIn.value = false;
-    if (navigate) Get.offAllNamed(AppRoutes.login);
+    if (navigate) {
+      // Go to navigation shell → profile tab shows LoginPage
+      Get.offAllNamed(AppRoutes.navigation, arguments: 3);
+    }
   }
 
   // ══════════════════════════════════════════════════════
@@ -122,7 +133,6 @@ class GlobalController extends GetxController {
   // COINS
   // ══════════════════════════════════════════════════════
 
-  /// Returns true if successful, false if insufficient coins.
   bool spendCoins(int amount) {
     if (totalCoins.value < amount) return false;
     totalCoins.value -= amount;
@@ -139,7 +149,7 @@ class GlobalController extends GetxController {
   }
 
   // ══════════════════════════════════════════════════════
-  // QUIZ REWARD  — called by QuizController
+  // QUIZ REWARD
   // ══════════════════════════════════════════════════════
 
   void onQuizComplete({
@@ -197,7 +207,6 @@ class GlobalController extends GetxController {
     _box.write(StorageKeys.lastLoginDate, now.toIso8601String());
     _saveToStorage();
 
-    // 7-day milestone bonus
     if (currentStreak.value % 7 == 0) {
       addCoins(75);
       StatusMessage.success('7-day streak! +75 bonus coins 🔥');

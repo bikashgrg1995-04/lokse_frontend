@@ -9,7 +9,6 @@ class DioClient {
 
   static bool _isRefreshing = false;
 
-  /// Initialize Dio client
   static void init() {
     client = dio.Dio(
       dio.BaseOptions(
@@ -32,27 +31,24 @@ class DioClient {
     );
   }
 
-  // ================= REQUEST =================
+  // ── REQUEST ───────────────────────────────────────────
   static Future<void> _onRequest(
     dio.RequestOptions options,
     dio.RequestInterceptorHandler handler,
   ) async {
     final noAuth = options.extra['noAuth'] == true;
-
     if (!noAuth) {
       final token = await TokenStorage.getAccessToken();
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
       }
     }
-
-    appLog.i(
-      '[REQUEST] ${options.method} ${options.uri}\nDATA: ${options.data}',
-    );
+    appLog
+        .i('[REQUEST] ${options.method} ${options.uri}\nDATA: ${options.data}');
     handler.next(options);
   }
 
-  // ================= RESPONSE =================
+  // ── RESPONSE ──────────────────────────────────────────
   static void _onResponse(
     dio.Response response,
     dio.ResponseInterceptorHandler handler,
@@ -63,7 +59,7 @@ class DioClient {
     handler.next(response);
   }
 
-  // ================= ERROR =================
+  // ── ERROR ─────────────────────────────────────────────
   static Future<void> _onError(
     dio.DioException error,
     dio.ErrorInterceptorHandler handler,
@@ -76,27 +72,25 @@ class DioClient {
     final is401 = error.response?.statusCode == 401;
     final noAuth = error.requestOptions.extra['noAuth'] == true;
 
-    if (is401 && !noAuth) {
-      final refreshed = await _refreshToken();
-      if (refreshed) {
-        final newToken = await TokenStorage.getAccessToken();
-        error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-
-        // Retry original request
-        final retryResponse = await client.fetch(error.requestOptions);
-        return handler.resolve(retryResponse);
-      } else {
-        await _forceLogout();
-        return;
-      }
-    }
+    // if (is401 && !noAuth) {
+    //   final refreshed = await _refreshToken();
+    //   if (refreshed) {
+    //     final newToken = await TokenStorage.getAccessToken();
+    //     error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+    //     final retryResponse = await client.fetch(error.requestOptions);
+    //     return handler.resolve(retryResponse);
+    //   } else {
+    //     await _forceLogout();
+    //     return;
+    //   }
+    // }
 
     handler.next(error);
   }
 
-  // ================= REFRESH TOKEN =================
-  static refreshToken() async {
-    await _refreshToken();
+  // ── REFRESH TOKEN ─────────────────────────────────────
+  static Future<bool> refreshToken() async {
+    return await _refreshToken();
   }
 
   static Future<bool> _refreshToken() async {
@@ -108,18 +102,18 @@ class DioClient {
       if (refreshToken == null) return false;
 
       final response = await dio.Dio().post(
-        '${ApiConfig.baseUrl}${ApiConfig.refresh}',
+        ApiConfig.refresh,
         data: {'refresh': refreshToken},
-        options: dio.Options(
-          extra: {'noAuth': true},
-        ),
+        options: dio.Options(extra: {'noAuth': true}),
       );
 
       final newAccess = response.data['access'];
+      // SimpleJWT returns a new refresh token when ROTATE_REFRESH_TOKENS=True
+      final newRefresh = response.data['refresh'] ?? refreshToken;
 
       await TokenStorage.saveTokens(
         accessToken: newAccess,
-        refreshToken: refreshToken, // SimpleJWT reuse
+        refreshToken: newRefresh,
       );
 
       appLog.i('JWT refreshed successfully');
@@ -132,9 +126,13 @@ class DioClient {
     }
   }
 
-  // ================= LOGOUT =================
+  // ── FORCE LOGOUT ──────────────────────────────────────
+  // ✅ Navigate to /navigation with index 3 (profile tab = login page)
+  // so bottom nav stays visible and user has proper app context
   static Future<void> _forceLogout() async {
     await TokenStorage.clear();
-    Get.offAllNamed('/login');
+    // Use navigation route so the shell (bottom nav) is preserved
+    // isLoggedIn will be false so ProfileTab shows LoginPage
+    Get.offAllNamed('/navigation', arguments: 3);
   }
 }

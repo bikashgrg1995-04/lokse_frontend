@@ -295,7 +295,7 @@ class _ProfileHeader extends StatelessWidget {
                         // XP Tier badge — gc.totalXp.value tracked by parent Obx
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 5),
+                              horizontal: 14, vertical: 0),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(20),
